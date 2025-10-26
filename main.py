@@ -16,7 +16,7 @@ intents.message_content = True
 bot = commands.Bot(intents=intents, command_prefix="!")
 
 
-def roll(r_dice, h_dice):
+def roll_v5(r_dice, h_dice):
     dtype = 10
     results_reg = []
     results_hun = []
@@ -77,10 +77,36 @@ def roll(r_dice, h_dice):
     return success_sum, results_reg, results_hun, special 
 
 
+def roll_cod(n_dice):
+    dtype = 10
+    count = int(n_dice) 
+    results = []
+    success = 0
+    threshould = 8
 
-@bot.command(name="roll")
+    x_again = 10
+    
+    def append_result():
+        r = random.randint(1, dtype)
+        results.append(r)
+        if r < x_again:
+            return
+
+        append_result()
+
+    for i in range(count):
+        append_result()
+
+    for i in results:
+        if i >= threshould:
+            success += 1
+
+    return results, success
+
+
+@bot.command(name="vroll")
 async def roll_bones(ctx, regular_dice, hunger_dice):
-    results = roll(regular_dice, hunger_dice)
+    results = roll_v5(regular_dice, hunger_dice)
 
     match results[3]:
         case "critical":
@@ -93,6 +119,14 @@ async def roll_bones(ctx, regular_dice, hunger_dice):
             answer = f"Results: {results[1]}, {results[2]} \n**No Success**" 
         case _:
             answer= f"Results: {results[1]}, {results[2]} \n**{results[0]}** Successes" 
+
+    await ctx.send(answer)
+
+@bot.command(name="croll")
+async def rill_chrones(ctx, dice):
+    results = roll_cod(dice)
+
+    answer = f"Results: {results[0]}\n **{results[1]}** successes\n"
 
     await ctx.send(answer)
 
