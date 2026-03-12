@@ -15,6 +15,7 @@ intents.message_content = True
 
 bot = commands.Bot(intents=intents, command_prefix="!")
 
+# dice-roller vor VtM 5th ed.
 
 def roll_v5(r_dice, h_dice):
     dtype = 10
@@ -77,6 +78,8 @@ def roll_v5(r_dice, h_dice):
     return success_sum, results_reg, results_hun, special 
 
 
+# dice-roller for cod
+
 def roll_cod(n_dice):
     dtype = 10
     count = int(n_dice) 
@@ -103,30 +106,53 @@ def roll_cod(n_dice):
 
     return results, success
 
+# command to engage VtM roller
 
 @bot.command(name="vroll")
-async def roll_bones(ctx, regular_dice, hunger_dice):
+async def roll_bones(ctx: discord.AppCommandContext, regular_dice: int, hunger_dice: int):
     results = roll_v5(regular_dice, hunger_dice)
 
     match results[3]:
         case "critical":
-            answer= f"**Critical Success** \nResults: {results[1]}, {results[2]} \n**{results[0]}** Successes" 
+            answer= f"Results for **{ctx.author.global_name}**: \n{results[1]}, {results[2]} \n**{results[0]}** Successes \n**Critical Success**" 
         case "messy":
-            answer= f"**Messy Critical** \nResults: {results[1]}, {results[2]} \n**{results[0]}** Successes" 
+            answer= f"Results for **{ctx.author.global_name}**: \n{results[1]}, {results[2]} \n**{results[0]}** Successes \n**Messy Critical**" 
         case "botch":
-            answer = f"Results: {results[1]}, {results[2]} \n**Botch**" 
+            answer = f"Results for **{ctx.author.global_name}**: \n{results[1]}, {results[2]} \n**Botch**" 
         case "zero":
-            answer = f"Results: {results[1]}, {results[2]} \n**No Success**" 
+            answer = f"Results for **{ctx.author.global_name}**: \n{results[1]}, {results[2]} \n**No Success**" 
         case _:
-            answer= f"Results: {results[1]}, {results[2]} \n**{results[0]}** Successes" 
+            answer= f"Results for **{ctx.author.global_name}**: \n{results[1]}, {results[2]} \n**{results[0]}** Successes" 
 
     await ctx.send(answer)
 
+# error-handling for insufficient number of arguments
+
+@roll_bones.error
+async def v_input_error(ctx: discord.AppCommandContext, error):
+    if isinstance(error, discord.ext.commands.errors.MissingRequiredArgument):
+        await ctx.send('insufficient arguments \nplease enter the total amount of dice and the number of hunger-dice')
+
+
+# rouse check command
+
+@bot.command(name="rouse")
+async def rouse_check(ctx: discord.AppCommandContext):
+    check = random.randint(1, 10)
+
+    if check >= 6:
+        await ctx.send(f"result for **{ctx.author.global_name}**: {check} \n**Success!**")
+    else:
+        await ctx.send(f"result for **{ctx.author.global_name}**: {check} \n**Failed!**")
+
+
+# command to engage CoD roller
+
 @bot.command(name="croll")
-async def rill_chrones(ctx, dice):
+async def roll_chrones(ctx: discord.AppCommandContext, dice: int):
     results = roll_cod(dice)
 
-    answer = f"Results: {results[0]}\n **{results[1]}** successes\n"
+    answer = f"Results for **{ctx.author.global_name}**: {results[0]}\n **{results[1]}** successes\n"
 
     await ctx.send(answer)
 
