@@ -18,6 +18,8 @@ bot = commands.Bot(intents=intents, command_prefix="!")
 # dice-roller vor VtM 5th ed.
 
 def roll_v5(r_dice, h_dice=0):
+    print(r_dice, h_dice)
+
     dtype = 10
     results_reg = []
     results_hun = []
@@ -109,8 +111,14 @@ def roll_cod(n_dice):
 # command to engage VtM roller
 
 @bot.command(name="vroll")
-async def roll_bones(ctx: discord.AppCommandContext, regular_dice: int, hunger_dice: int):
-    results = roll_v5(regular_dice, hunger_dice)
+async def roll_bones(ctx: discord.AppCommandContext, *args):
+
+    if len(args) == 2:
+        results = roll_v5(args[0], args[1])
+    elif len(args) == 1:
+        results = roll_v5(args[0])
+    else:
+        await ctx.send('insufficient arguments \nplease enter the total amount of dice and optionally the hunger level')
 
     match results[3]:
         case "critical":
@@ -131,7 +139,7 @@ async def roll_bones(ctx: discord.AppCommandContext, regular_dice: int, hunger_d
 @roll_bones.error
 async def v_input_error(ctx: discord.AppCommandContext, error):
     if isinstance(error, discord.ext.commands.errors.MissingRequiredArgument):
-        await ctx.send('insufficient arguments \nplease enter the total amount of dice and the number of hunger-dice')
+        await ctx.send('insufficient arguments \nplease enter the total amount of dice and optionally the hunger level')
 
 
 # rouse check command
