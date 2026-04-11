@@ -18,8 +18,6 @@ bot = commands.Bot(intents=intents, command_prefix="!")
 # dice-roller vor VtM 5th ed.
 
 def roll_v5(r_dice, h_dice=0):
-    print(r_dice, h_dice)
-
     dtype = 10
     results_reg = []
     results_hun = []
