@@ -78,6 +78,33 @@ def roll_v5(r_dice, h_dice=0):
     return success_sum, results_reg, results_hun, special 
 
 
+# simple d10 dice roller
+
+def roll_10(n_dice, x_again="n"):
+    results = []
+    count = int(n_dice)
+
+    if x_again.lower() != "x":
+
+       for _ in range(count):
+            results.append(random.randint(1, 10))
+
+       return results
+    def append_result():
+
+        r = random.randint(1, 10)
+        results.append(r)
+        if r != 10:
+            return
+
+        append_result()
+
+    for _ in range(count):
+        append_result()
+
+    return results
+
+
 # dice-roller for cod
 
 def roll_cod(n_dice):
@@ -117,6 +144,7 @@ async def roll_bones(ctx: discord.AppCommandContext, *args):
         results = roll_v5(args[0])
     else:
         await ctx.send('insufficient arguments \nplease enter the total amount of dice and optionally the hunger level')
+        return
 
     match results[3]:
         case "critical":
@@ -132,13 +160,6 @@ async def roll_bones(ctx: discord.AppCommandContext, *args):
 
     await ctx.send(answer)
 
-# error-handling for insufficient number of arguments
-
-@roll_bones.error
-async def v_input_error(ctx: discord.AppCommandContext, error):
-    if isinstance(error, discord.ext.commands.errors.MissingRequiredArgument):
-        await ctx.send('insufficient arguments \nplease enter the total amount of dice and optionally the hunger level')
-
 
 # rouse check command
 
@@ -150,6 +171,22 @@ async def rouse_check(ctx: discord.AppCommandContext):
         await ctx.send(f"result for **{ctx.author.global_name}**: {check} \n**Success!**")
     else:
         await ctx.send(f"result for **{ctx.author.global_name}**: {check} \n**Failed!**")
+
+
+# command d10 roller
+
+@bot.command(name="r")
+async def roll10(ctx: discord.AppCommandContext, *args):
+
+    if len(args) == 2:
+        results = roll_10(args[0], args[1])
+    elif len(args) == 1:
+        results = roll_10(args[0])
+    else:
+        await ctx.send('insufficient arguments \nplease enter the total amount of dice and optionally add an "x" for exploding dice pools')
+        return
+
+    await ctx.send(f"Results for **{ctx.author.global_name}**: {results}" )
 
 
 # command to engage CoD roller
