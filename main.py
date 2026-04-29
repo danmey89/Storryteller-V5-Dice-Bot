@@ -96,23 +96,19 @@ def roll_10_success_count(n_dice: int, threshold=99, count_success=False, x_agai
 
     if count_success:
 
-        if x_again.lower() != "x":
-
-           for _ in range(n_dice):
-                results.append(random.randint(1, 10))
-        
-           for i in results:
-                if i >= threshold:
-                    success += 1
-                elif i == 1:
-                    success -=1
-
-           return results, success
-
-        # with exploding dice
-
-        for _ in range(n_dice):
-            append_result(p)
+        match x_again.lower(): 
+            case "n":
+                for _ in range(n_dice):
+                    results.append(random.randint(1, 10))
+            case "x":                           # exploding dice
+                for _ in range(n_dice):
+                    append_result(p)
+            case "d":                           # double result on 10
+                for _ in range(n_dice):
+                    r = random.randint(1, 10)
+                    results.append(r)
+                    if r == 10:
+                        success += 1
 
         for i in results:
             if i >= threshold:
@@ -124,14 +120,14 @@ def roll_10_success_count(n_dice: int, threshold=99, count_success=False, x_agai
         
     # simple dice roller
 
-    if x_again.lower() != "x":
+    if x_again.lower() == "n":
 
        for _ in range(n_dice):
             results.append(random.randint(1, 10))
 
        return results, None
     
-    # with exploding dice
+    # exploding dice
 
     for _ in range(n_dice):
             append_result(p)
@@ -232,12 +228,12 @@ async def roll10(ctx: discord.AppCommandContext, *args):
 
 
         if count_success:
-             await ctx.send(f"Results for **{ctx.author.global_name}**: {results[0]}\n **{results[1]}** successes\n")
+             await ctx.send(f"Results for **{ctx.author.global_name}**: \n{results[0]} \n**{results[1]}** successes")
         else:
-            await ctx.send(f"Results for **{ctx.author.global_name}**: {results[0]}")
+            await ctx.send(f"Results for **{ctx.author.global_name}**: \n{results[0]}")
 
     except ValueError:
-        await ctx.send('incorrect or insufficient arguments \n- please enter the total amount of dice \n- optionally add a target value for successes \n- add an "x" for exploding dice pools')
+        await ctx.send('incorrect or insufficient arguments \n- please enter the total amount of dice \n- optionally add a target value for successes \n- add an "x" for exploding dice pools or \n- add a "d" for double success on 10')
 
 
 # command CoD roller
