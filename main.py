@@ -1,4 +1,5 @@
-import os 
+import os
+from typing import List 
 
 from discord.ext import commands
 import discord
@@ -17,7 +18,7 @@ bot = commands.Bot(intents=intents, command_prefix="!")
 
 # dice-roller vor VtM 5th ed.
 
-def roll_v5(r_dice: int, h_dice=0):
+def roll_v5(r_dice: int, h_dice=0) -> tuple[int, List, List, str]:
     results_reg = []
     results_hun = []
     threshold = 6
@@ -49,51 +50,36 @@ def roll_v5(r_dice: int, h_dice=0):
             if r == 10:
                 crit_hun += 1
                 crit_type.append("h")
+
         if r == 1:
             botch += 1
 
-
     # test for special conditions (criticals, messy criticals, botches)
 
-    if success_sum == 0:
-        special = "zero"
-    elif success_sum== 0 and botch != 0:
+    if success_sum== 0 and botch != 0:
         special = "botch"
+    elif success_sum == 0:
+        special = "zero"
     elif len(crit_type) > 1:
-        success_sum += (len(crit_type) // 2) * 2
-        if len(crit_type) % 2 == 0:
-            for crit in crit_type:
-                if crit == "h":
-                    special = "messy"
-                else:
-                    special = "critical"
+        success_sum += (len(crit_type) // 2)
+        if crit_hun > 1 or (crit_hun == 1 and (crit_reg % 2) != 0):
+            special = "messy"
         else:
-            for crit in crit_type[1:]:
-                if crit == "h":
-                    special = "messy"
-                else:
-                    special = "critical"
-      
+            special = "critical"
 
     return success_sum, results_reg, results_hun, special 
 
 
-# simple d10 dice roller
+# d10 roller with optional success level counter, optional exploding dice
 
-def roll_10(n_dice: int, x_again="n"):
+def roll_10_success_count(n_dice: int, threshold=99, count_success=False, x_again="n") -> tuple[List, int|None]:
     results = []
-    p= 0
-
-    if x_again.lower() != "x":
-
-       for _ in range(n_dice):
-            results.append(random.randint(1, 10))
-
-       return results
+    p = 0
+    success = 0
 
     def append_result(p: int):
         
-        # adds extra die roll for any 10 rolled a 1 on an extra die is disregarded
+        # adds extra die roll for any 10 rolled, 1 on extra die is disregarded
 
         r = random.randint(1, 10)
         if p == 10 and r == 1:
@@ -105,65 +91,57 @@ def roll_10(n_dice: int, x_again="n"):
             return
 
         append_result(p)
-
-    for _ in range(n_dice):
-        append_result(p)
-
-    return results
-
-
-# d10 roller with success level counter
-
-def roll_10_success_count(n_dice: int, threshold: int, x_again="n"):
-    results = []
-    p = 0
-    success = 0
     
-    if x_again.lower() != "x":
+    # with success counter
 
-       for _ in range(n_dice):
-            results.append(random.randint(1, 10))
-    
-       for i in results:
+    if count_success:
+
+        if x_again.lower() != "x":
+
+           for _ in range(n_dice):
+                results.append(random.randint(1, 10))
+        
+           for i in results:
+                if i >= threshold:
+                    success += 1
+                elif i == 1:
+                    success -=1
+
+           return results, success
+
+        # with exploding dice
+
+        for _ in range(n_dice):
+            append_result(p)
+
+        for i in results:
             if i >= threshold:
                 success += 1
             elif i == 1:
                 success -=1
 
-       return results, success
-
-
-    def append_result(p: int):
+        return results, success
         
-        # adds extra die roll for any 10 rolled a 1 on an extra die is disregarded
+    # simple dice roller
 
-        r = random.randint(1, 10)
-        if p == 10 and r == 1:
-            return
+    if x_again.lower() != "x":
 
-        results.append(r)
-        p = r
-        if r != 10:
-            return
+       for _ in range(n_dice):
+            results.append(random.randint(1, 10))
 
-        append_result(p)
+       return results, None
+    
+    # with exploding dice
 
     for _ in range(n_dice):
-        append_result(p)
+            append_result(p)
 
-    for i in results:
-        if i >= threshold:
-            success += 1
-        elif i == 1:
-            success -=1
-
-
-    return results, success
+    return results, None
 
 
 # dice-roller for cod
 
-def roll_cod(n_dice: int, x_again=10):
+def roll_cod(n_dice: int, x_again=10) ->  tuple[List, int]:
     results = []
     success = 0
     threshold = 8
@@ -205,7 +183,7 @@ async def roll_bones(ctx: discord.AppCommandContext, *args):
             case "messy":
                 answer= f"Results for **{ctx.author.global_name}**: \n{results[1]}, {results[2]} \n**{results[0]}** Successes \n**Messy Critical**" 
             case "botch":
-                answer = f"Results for **{ctx.author.global_name}**: \n{results[1]}, {results[2]} \n**Botch**" 
+                answer = f"Results for **{ctx.author.global_name}**: \n{results[1]}, {results[2]} \n**Bestial Failure**" 
             case "zero":
                 answer = f"Results for **{ctx.author.global_name}**: \n{results[1]}, {results[2]} \n**No Success**" 
             case _:
@@ -236,29 +214,27 @@ async def roll10(ctx: discord.AppCommandContext, *args):
     count_success = False
     
     try:
-
         if len(args) == 1:
-            results = roll_10(int(args[0]))
+            results = roll_10_success_count(int(args[0]))
         elif len(args) == 2:
             if args[1].isnumeric():
-                results = roll_10_success_count(int(args[0]), int(args[1]))
                 count_success = True
+                results = roll_10_success_count(int(args[0]), threshold=int(args[1]), count_success=count_success)
             else:
-                results = roll_10(int(args[0]), args[1])
+                results = roll_10_success_count(int(args[0]), x_again=args[1])
         elif len(args) == 3:
-            if not args[1].isnumeric():
-                raise ValueError
-            if args[2].isnumeric():
-                raise ValueError
-            results = roll_10_success_count(int(args[0]), int(args[1]), args[2])
             count_success = True
+            if not args[1].isnumeric() or args[2].isnumeric():
+                raise ValueError
+            results = roll_10_success_count(int(args[0]), threshold=int(args[1]), x_again=args[2], count_success=count_success)
         else:
             raise ValueError
+
 
         if count_success:
              await ctx.send(f"Results for **{ctx.author.global_name}**: {results[0]}\n **{results[1]}** successes\n")
         else:
-            await ctx.send(f"Results for **{ctx.author.global_name}**: {results}")
+            await ctx.send(f"Results for **{ctx.author.global_name}**: {results[0]}")
 
     except ValueError:
         await ctx.send('incorrect or insufficient arguments \n- please enter the total amount of dice \n- optionally add a target value for successes \n- add an "x" for exploding dice pools')
