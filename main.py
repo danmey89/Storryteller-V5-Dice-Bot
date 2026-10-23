@@ -174,15 +174,15 @@ async def roll_bones(ctx: discord.AppCommandContext, *args):
 
         match results[3]:
             case "critical":
-                answer= f"Results for **{ctx.author.global_name}**: \n{results[1]}, {results[2]} \n**{results[0]}** Successes \n**Critical Success**" 
+                answer= f"Results for **{ctx.author.display_name}**: \n{results[1]}, {results[2]} \n**{results[0]}** Successes \n**Critical Success**" 
             case "messy":
-                answer= f"Results for **{ctx.author.global_name}**: \n{results[1]}, {results[2]} \n**{results[0]}** Successes \n**Messy Critical**" 
+                answer= f"Results for **{ctx.author.display_name}**: \n{results[1]}, {results[2]} \n**{results[0]}** Successes \n**Messy Critical**" 
             case "botch":
-                answer = f"Results for **{ctx.author.global_name}**: \n{results[1]}, {results[2]} \n**Bestial Failure**" 
+                answer = f"Results for **{ctx.author.display_name}**: \n{results[1]}, {results[2]} \n**Bestial Failure**" 
             case "zero":
-                answer = f"Results for **{ctx.author.global_name}**: \n{results[1]}, {results[2]} \n**No Success**" 
+                answer = f"Results for **{ctx.author.display_name}**: \n{results[1]}, {results[2]} \n**No Success**" 
             case _:
-                answer= f"Results for **{ctx.author.global_name}**: \n{results[1]}, {results[2]} \n**{results[0]}** Successes" 
+                answer= f"Results for **{ctx.author.display_name}**: \n{results[1]}, {results[2]} \n**{results[0]}** Successes" 
 
         await ctx.send(answer)
 
@@ -197,9 +197,9 @@ async def rouse_check(ctx: discord.AppCommandContext):
     check = random.randint(1, 10)
 
     if check >= 6:
-        await ctx.send(f"result for **{ctx.author.global_name}**: {check} \n**Success!**")
+        await ctx.send(f"result for **{ctx.author.display_name}**: {check} \n**Success!**")
     else:
-        await ctx.send(f"result for **{ctx.author.global_name}**: {check} \n**Failed!**")
+        await ctx.send(f"result for **{ctx.author.display_name}**: {check} \n**Failed!**")
 
 
 # command d10 roller
@@ -227,9 +227,9 @@ async def roll10(ctx: discord.AppCommandContext, *args):
 
 
         if count_success:
-             await ctx.send(f"Results for **{ctx.author.global_name}**: \n{results[0]} \n**{results[1]}** successes")
+             await ctx.send(f"Results for **{ctx.author.display_name}**: \n{results[0]} \n**{results[1]}** successes")
         else:
-            await ctx.send(f"Results for **{ctx.author.global_name}**: \n{results[0]}")
+            await ctx.send(f"Results for **{ctx.author.display_name}**: \n{results[0]}")
 
     except ValueError:
         await ctx.send('incorrect or insufficient arguments \n- please enter the total amount of dice \n- optionally add a target value for successes \n- add an "x" for exploding dice pools or \n- add a "d" for double success on 10')
@@ -248,7 +248,7 @@ async def roll_chrones(ctx: discord.AppCommandContext, *args):
         else:
             raise ValueError
 
-        await ctx.send(f"Results for **{ctx.author.global_name}**: {results[0]}\n **{results[1]}** successes\n")
+        await ctx.send(f"Results for **{ctx.author.display_name}**: {results[0]}\n **{results[1]}** successes\n")
 
     except ValueError:
         await ctx.send('incorrect or insufficient arguments \n- please enter the total amount of dice \n- optionally add a value for x-again (standart 10)')
