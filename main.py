@@ -50,8 +50,7 @@ def roll_v5(r_dice: int, h_dice=0) -> tuple[int, List, List, str]:
             if r == 10:
                 crit_hun += 1
                 crit_type.append("h")
-
-        if r == 1:
+        elif r == 1:
             botch += 1
 
     # test for special conditions (criticals, messy criticals, botches)
@@ -61,7 +60,7 @@ def roll_v5(r_dice: int, h_dice=0) -> tuple[int, List, List, str]:
     elif success_sum == 0:
         special = "zero"
     elif len(crit_type) > 1:
-        success_sum += (len(crit_type) // 2)
+        success_sum += ((len(crit_type) // 2) * 2)
         if crit_hun > 1 or (crit_hun == 1 and (crit_reg % 2) != 0):
             special = "messy"
         else:
