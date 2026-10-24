@@ -5,6 +5,7 @@ from discord.ext import commands
 import discord
 from dotenv import load_dotenv
 import random
+import json
 
 
 
@@ -15,6 +16,66 @@ intents = discord.Intents.default()
 intents.message_content = True 
 
 bot = commands.Bot(intents=intents, command_prefix="!")
+
+data_path = "data.json"
+
+data = {}
+
+# initial data import
+
+def load_files():
+    global data
+
+    def convert_keys_to_int(data) -> dict:
+        #Recursively convert string keys to integers in a JSON-derived Python object.
+        if isinstance(data, dict):
+            new_dict = {}
+            for key, value in data.items():
+                # Try converting the key to an integer
+                try:
+                    int_key = int(key)
+                except ValueError:
+                    # Keep the original key if conversion fails (e.g., "abc")
+                    int_key = key
+                # Recursively process the value
+                new_dict[int_key] = convert_keys_to_int(value)
+            return new_dict
+        else:
+            return data
+
+    try:
+        with open(data_path, "r") as file:
+            str_data = json.load(file)
+
+        data = convert_keys_to_int(str_data)
+    
+    except FileNotFoundError:
+        with open(data_path, "w") as file:
+            file.write(json.dumps({}))
+
+
+# constantly keep player data updated
+
+def update_players(ctx: discord.AppCommandContext):
+    global data 
+    player = int(ctx.author.id)
+    guild = int(ctx.guild.id)
+
+    if guild in data:
+        if player in data[guild]:
+            return
+        else:
+            data[guild].update({player: {"name": ctx.author.display_name, "hunger": 1}})
+
+            with open(data_path, "w") as file:
+                file.write(json.dumps(data))
+    else:
+        data.update({guild: {player: {"name": ctx.author.display_name, "hunger": 1}}})
+
+        with open(data_path, "w") as file:
+            file.write(json.dumps(data))
+
+
 
 # dice-roller vor VtM 5th ed.
 
@@ -159,6 +220,36 @@ def roll_cod(n_dice: int, x_again=10) ->  tuple[List, int]:
     return results, success
 
 
+# hunger tracker
+
+@bot.command(name="hgr")
+async def track_hgr(ctx: discord.AppCommandContext, *args):
+    global data
+    player = ctx.author.id
+    guild = ctx.guild.id
+
+    update_players(ctx)
+    
+    try:
+        if args[0].isnumeric():
+            data[guild][player]["hunger"] = args[0]
+
+            with open(data_path, "w") as file:
+                file.write(json.dumps(data))
+        elif args[0] == "all":
+            answer = "**Hunger**"
+            for key in data[guild].keys():
+                answer += f"\n{data[guild][key]["name"]}: {data[guild][key]["hunger"]}"
+            await ctx.send(answer)
+        else:
+            raise ValueError
+
+    except ValueError:
+        await ctx.send(f"current hunger for {ctx.author.display_name}: {data[guild][player]["hunger"]}")
+    except IndexError:
+        await ctx.send(f"current hunger for {ctx.author.display_name}: {data[guild][player]["hunger"]}")
+
+
 # command VtM roller
 
 @bot.command(name="vroll")
@@ -189,6 +280,7 @@ async def roll_bones(ctx: discord.AppCommandContext, *args):
     except ValueError:
         await ctx.send('insufficient arguments \n- please enter the total amount of dice \n- optionally add the hunger level')
         
+    update_players(ctx)
 
 # rouse check command
 
@@ -201,6 +293,7 @@ async def rouse_check(ctx: discord.AppCommandContext):
     else:
         await ctx.send(f"result for **{ctx.author.display_name}**: {check} \n**Failed!**")
 
+    update_players(ctx)
 
 # command d10 roller
 
@@ -252,7 +345,13 @@ async def roll_chrones(ctx: discord.AppCommandContext, *args):
 
     except ValueError:
         await ctx.send('incorrect or insufficient arguments \n- please enter the total amount of dice \n- optionally add a value for x-again (standart 10)')
+        
+# remove player
 
+#@bot.command(name"rmv")
+#async def rmv_player(ctx: discord.AppCommandContext, *args)
+
+load_files()
 bot.run(TOKEN)
 
 
