@@ -129,6 +129,12 @@ def roll_v5(r_dice: int, h_dice=0) -> tuple[int, List, List, str]:
 
     return success_sum, results_reg, results_hun, special 
 
+def querry_hunger(ctx: discord.AppCommandContext) -> int:
+
+    hunger = data[ctx.guild.id][ctx.author.id]["hunger"]
+
+    return hunger
+
 
 # d10 roller with optional success level counter, optional exploding dice
 
@@ -254,12 +260,13 @@ async def track_hgr(ctx: discord.AppCommandContext, *args):
 
 @bot.command(name="vroll")
 async def roll_bones(ctx: discord.AppCommandContext, *args):
+    update_players(ctx)
 
     try:
         if len(args) == 2:
             results = roll_v5(int(args[0]), int(args[1]))
         elif len(args) == 1:
-            results = roll_v5(int(args[0]))
+            results = roll_v5(int(args[0]), int(querry_hunger(ctx)))
         else:
             raise ValueError
 
@@ -280,7 +287,6 @@ async def roll_bones(ctx: discord.AppCommandContext, *args):
     except ValueError:
         await ctx.send('insufficient arguments \n- please enter the total amount of dice \n- optionally add the hunger level')
         
-    update_players(ctx)
 
 # rouse check command
 
@@ -293,7 +299,6 @@ async def rouse_check(ctx: discord.AppCommandContext):
     else:
         await ctx.send(f"result for **{ctx.author.display_name}**: {check} \n**Failed!**")
 
-    update_players(ctx)
 
 # command d10 roller
 
